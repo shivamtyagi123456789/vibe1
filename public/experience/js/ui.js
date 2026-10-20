@@ -31,7 +31,9 @@ export function createUI() {
   document.querySelectorAll('[data-split]').forEach((line) => {
     const txt = line.textContent;
     line.textContent = '';
-    line.setAttribute('aria-label', txt);
+    const accessibleText = document.createElement('span');
+    accessibleText.className = 'visually-hidden'; accessibleText.textContent = txt;
+    line.appendChild(accessibleText);
     [...txt].forEach((ch, i) => {
       const s = document.createElement('span');
       s.className = 'ch';

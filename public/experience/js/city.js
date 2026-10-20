@@ -93,7 +93,7 @@ export function createCity({ scene, camera, canvas, launch }) {
     if (contour.width !== w || contour.height !== h) { contour.width = w; contour.height = h; }
     const values = new Float32Array(nx * ny), cx = w * .5, cy = h * .55, radius = Math.min(w, h) * .36;
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) values[j * nx + i] = Math.hypot(i * cell - cx, j * cell - cy) / 23 + vnoise(i * .08 + time * .01, j * .08) * 3;
-    ctx.clearRect(0, 0, w, h); ctx.strokeStyle = '#aa909033'; ctx.lineWidth = .7; ctx.beginPath();
+    ctx.clearRect(0, 0, w, h); ctx.strokeStyle = `rgba(170,144,144,${0.2 + (window.nookAudio?.bands.mid || 0) * 0.5})`; ctx.lineWidth = .7; ctx.beginPath();
     for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
       if (Math.hypot(i * cell - cx, j * cell - cy) < radius) continue;
       const k = j * nx + i, a = values[k], b = values[k + 1], c = values[k + nx + 1], d = values[k + nx];

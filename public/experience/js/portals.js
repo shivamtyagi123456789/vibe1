@@ -96,6 +96,7 @@ export function createPortals({ camera, audio, resolve, transitions }) {
   function discover(s, silent) {
     if (found.has(s.p.id)) return;
     found.add(s.p.id); refreshCount();
+    window.dispatchEvent(new CustomEvent('nook:discover', { detail: { id: s.p.id, count: found.size, total: list.length } }));
     s.el.classList.add('just-found'); setTimeout(() => s.el.classList.remove('just-found'), 1200);
     if (!silent) {
       blip(660, 0.08); setTimeout(() => blip(990, 0.08), 90);
@@ -137,6 +138,14 @@ export function createPortals({ camera, audio, resolve, transitions }) {
   card.className = 'portal-card-wrap'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.hidden = true;
   document.body.appendChild(card);
   card.addEventListener('click', (e) => { if (e.target === card || e.target.closest('[data-close]')) closeCard(); });
+  card.setAttribute('aria-label', 'Project portal preview');
+  card.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const targets = [...card.querySelectorAll('a,button')];
+    const first = targets[0], last = targets[targets.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 
   function openPortalCard(s) {
     discover(s);
@@ -184,7 +193,10 @@ export function createPortals({ camera, audio, resolve, transitions }) {
     warping = transitions.play({ ...p, transition: override || p.transition }, done, center, () => {
       warping = false; closeCard();
     });
-    if (warping) blip(180, .6, 'sine', .4, 700);
+    if (warping) {
+      blip(180, .6, 'sine', .4, 700);
+      try { window.nookTrack?.('portal_launch', { id: p.id, transition: override || p.transition }); } catch { /* Analytics cannot block navigation. */ }
+    }
   }
 
   /* ---------- tiny synth blips (only when the user enabled sound) ---------- */
@@ -196,7 +208,7 @@ export function createPortals({ camera, audio, resolve, transitions }) {
       if (toFreq) o.frequency.exponentialRampToValueAtTime(toFreq, t + dur);
       gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(0.06 * vol, t + 0.01);
       gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(gn); gn.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+      o.connect(gn); gn.connect(audio.sfxBus); o.start(t); o.stop(t + dur + 0.02);
     } catch (e) { /* ignore */ }
   }
 
@@ -259,5 +271,5 @@ export function createPortals({ camera, audio, resolve, transitions }) {
     else warp(s.p, null, ev, transition); // the <a target=_blank> opens natively (no popup blocker)
   }
 
-  return { update, scan, list, found, launch, isFound: (id) => found.has(id), get open() { return !!openCard || warping; }, _debug: () => ({ W: innerWidth, H: innerHeight, active, scanT, DEBUG, openCard: !!openCard, spots: spots.map((s) => [s.p.id, s.onScreen, +s.vis.toFixed(2)]) }) };
+  return { update, scan, list, found, launch, peek: id => { const spot = spots.find(s => s.p.id === id); if (spot) openPortalCard(spot); }, isFound: (id) => found.has(id), get open() { return !!openCard || warping; }, _debug: () => ({ W: innerWidth, H: innerHeight, active, scanT, DEBUG, openCard: !!openCard, spots: spots.map((s) => [s.p.id, s.onScreen, +s.vis.toFixed(2)]) }) };
 }

@@ -150,7 +150,7 @@ export function buildWorld(scene) {
   const rainGeo = new THREE.BufferGeometry();
   rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
   const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: '#b9c8ff', transparent: true, opacity: 0.35, depthWrite: false }));
-  rain.frustumCulled = false; W.group.add(rain);
+  rain.frustumCulled = false; W.group.add(rain); W.rain = rain;
 
   // window droplets (sprites sliding on the glass)
   const dotTex = TX.softDot();
@@ -160,7 +160,7 @@ export function buildWorld(scene) {
   for (let i = 0; i < DN; i++) drops.push({ x: wx0 + R() * win.w, y: wy0 + R() * win.h, v: 0, wait: R() * 6 });
   const dropGeo = new THREE.BufferGeometry(); dropGeo.setAttribute('position', new THREE.BufferAttribute(dropPos, 3));
   const dropPts = new THREE.Points(dropGeo, new THREE.PointsMaterial({ size: 0.035, map: dotTex, color: '#dfe8ff', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
-  dropPts.frustumCulled = false; W.group.add(dropPts);
+  dropPts.frustumCulled = false; W.group.add(dropPts); W.drops = dropPts;
 
   // curtains (vertex-animated cloth)
   const curtainMat = std('#b8465f', { roughness: 0.95, side: THREE.DoubleSide, map: TX.fabric('#b8465f') });
@@ -455,7 +455,7 @@ export function buildWorld(scene) {
   W.motePts = motePts; // REANIMATED Part 3: replaced by the GPU dust in atmos.js
 
   /* ---------------- ambient + extra ---------------- */
-  const hemi = new THREE.HemisphereLight('#8d78c9', '#2a1830', 0.25); W.group.add(hemi);
+  const hemi = new THREE.HemisphereLight('#8d78c9', '#2a1830', 0.25); W.group.add(hemi); W.hemi = hemi;
 
   /* ---------------- REANIMATED Part 2: reactions ----------------
      W.react(id) starts a short procedural reaction; W.hover[id] (0..1)
@@ -579,6 +579,7 @@ export function buildWorld(scene) {
   W.strike = (k = 1) => { lightning = k; nextBolt = 12 + Math.random() * 12; if (W.onStrike) W.onStrike(k); };
   W.update = (t, dt, L) => {
     const on = L.lights, mus = L.music;
+    const bands = L.bands || { low: 0, mid: 0, high: 0 };
     // door
     doorPivot.rotation.y = -L.door * 1.62;
     swToggle.rotation.x = on > 0.05 ? -0.5 : 0.5;
@@ -601,7 +602,7 @@ export function buildWorld(scene) {
     const n = L.neon;
     let nf = n;
     if (n > 0 && n < 1) nf = n * (Math.sin(t * 60) > 0.2 - n ? 1 : 0.15);
-    const npulse = 1 + mus * L.beatPulse * 0.18 + Math.sin(t * 1.3) * 0.04;
+    const npulse = 1 + bands.mid * 0.65 + Math.sin(t * 1.3) * 0.04;
     const ni = nf * npulse;
     neonMat.color.setScalar(clamp(ni, 0, 1.4));
     neonLight.intensity = 5 * ni;
@@ -610,7 +611,7 @@ export function buildWorld(scene) {
     let lit = 0;
     bulbs.forEach((b) => {
       const k = smooth(seg(L.string, b.order * 0.7, b.order * 0.7 + 0.3));
-      const tw = 0.82 + 0.18 * Math.sin(t * b.sp + b.ph) + mus * L.beatPulse * 0.25;
+      const tw = 0.82 + 0.18 * Math.sin(t * b.sp + b.ph) + bands.high * 0.8;
       b.m.material.color.copy(b.col).multiplyScalar(0.1 + k * 1.6 * tw);
       lit += k;
     });
@@ -620,7 +621,7 @@ export function buildWorld(scene) {
     candleLight.intensity = (0.6 + on * 0.5) * cf; flame.scale.set(1, 1.8 * cf, 1);
     // lightning
     nextBolt -= dt;
-    if (nextBolt < 0) { W.strike(1); }
+    if (nextBolt < 0 && W.weather === 'storm') { W.strike(1); }
     lightning = Math.max(0, lightning - dt * (lightning > 0.6 ? 6 : 2.5));
     // flicker is derived (not fed back) so the strobe is frame-rate independent
     const flick = 0.75 + 0.25 * Math.sin(t * 38);
@@ -628,10 +629,11 @@ export function buildWorld(scene) {
     // rain
     for (let i = 0; i < RN; i++) {
       const d = rainSeed[i];
-      d.y -= d.v * dt; if (d.y < -0.5) d.y += 5.5;
-      const o = i * 6;
-      rainPos[o] = d.x; rainPos[o + 1] = d.y; rainPos[o + 2] = d.z;
-      rainPos[o + 3] = d.x - 0.02; rainPos[o + 4] = d.y + d.l; rainPos[o + 5] = d.z;
+      const snow = W.snowAmount || 0;
+      d.y -= d.v * dt * (1 - snow * 0.94); if (d.y < -0.5) d.y += 5.5;
+      const o = i * 6, x = d.x + Math.sin(t + i) * snow * 0.25;
+      rainPos[o] = x; rainPos[o + 1] = d.y; rainPos[o + 2] = d.z;
+      rainPos[o + 3] = x - 0.02 * (1 - snow); rainPos[o + 4] = d.y + d.l * (1 - snow * 0.94); rainPos[o + 5] = d.z;
     }
     rainGeo.attributes.position.needsUpdate = true;
     // window droplets
@@ -676,7 +678,7 @@ export function buildWorld(scene) {
     // turntable + speakers
     platter.rotation.y -= dt * 3.5 * mus;
     W.tonearm.rotation.y = lerp(0.5, 0.95, smooth(clamp(L.arm, 0, 1)));
-    speakers.forEach((s, i) => { s.scale.set(1, 1 + mus * L.beatPulse * 1.6, 1); });
+    speakers.forEach((s, i) => { s.scale.set(1, 1 + bands.low * 0.7, 1); });
     // cat breathing / tail / ears
     const c = W.cat;
     c.body.scale.y = 0.6 + Math.sin(t * 1.6) * 0.02;

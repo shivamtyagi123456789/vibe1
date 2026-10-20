@@ -29,6 +29,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { buildWorld, LAYOUT } from './world.js';
 import { buildCharacter, buildHeadphones } from './character.js';
 import { LofiAudio } from './audio.js';
+import { createPlayer } from './player.js';
+import { createWeather } from './atmosphere.js';
 import { createUI } from './ui.js';
 import { createPortals } from './portals.js';
 import { createAperture } from './aperture.js'; // REANIMATED Part 1
@@ -102,13 +104,17 @@ let ready = false, started = false, failed = false;
 let aperture = null, hud = null, scrollU = 0; // REANIMATED Part 1
 let interact = null, atmos = null, lightsK = 0; // REANIMATED Part 2 + 3
 let catalog = null, shelf = null, marker = null, canal = null, city = null, logbook = null, transitions = null;
+let weather = null, player = null, secretTarget = 0, secretAngle = 0;
 let dof = null; // REANIMATED Part 3: BokehPass, focus/drawer mode only
+window.nookAudio = audio;
+window.addEventListener('nook:pixel', () => { audio.retro = document.body.classList.contains('eight-bit'); });
+window.addEventListener('nook:secret', e => { secretTarget = e.detail.open ? 1 : 0; });
 // Explicit tiers stay fixed; automatic mode prioritizes frame pacing over extra effects.
 const autoQuality = !['low', 'med', 'high'].includes(params.get('quality'));
-const QUALITY = autoQuality ? 'med' : params.get('quality');
+const QUALITY = autoQuality ? (reduceMotion || navigator.connection?.saveData || (navigator.deviceMemory && navigator.deviceMemory <= 4) || navigator.hardwareConcurrency <= 4 ? 'low' : navigator.deviceMemory >= 8 && navigator.hardwareConcurrency >= 8 && innerWidth >= 1024 ? 'high' : 'med') : params.get('quality');
 let renderTier = QUALITY;
 let tl = 0, prevT = -1, clock = 0, startClock = 0;
-let DPR = Math.min(window.devicePixelRatio || 1, QUALITY === 'high' ? 1.5 : 1.25);
+let DPR = Math.min(window.devicePixelRatio || 1, QUALITY === 'high' ? 1.5 : QUALITY === 'low' ? 1 : 1.25);
 
 function fail(msg) {
   failed = true;
@@ -170,6 +176,9 @@ async function boot() {
   UI.progress(0.3); await nextFrame();
 
   W = buildWorld(scene);
+  weather = createWeather({ scene, W, audio, reducedMotion: reduceMotion });
+  window.nookWeather = weather;
+  player = createPlayer({ audio, timeline: () => tl, weather, quality: QUALITY });
   canal = createCanal({ scene, camera, W, tier: QUALITY, launch: (id, event) => portals?.launch(id, event) });
   window.nookCanal = canal;
   city = createCity({ scene, camera, canvas, launch: (id, event) => portals?.launch(id, event, 'iris') });
@@ -211,7 +220,7 @@ async function boot() {
     },
   });
   window.nookInteract = interact; window.nookAtmos = atmos;
-  tl = params.has('t') ? parseFloat(params.get('t')) || 0 : (reduceMotion || window.NOOK_DEMO ? SKIP_TO : 0);
+  tl = params.has('t') ? parseFloat(params.get('t')) || 0 : (reduceMotion || window.NOOK_DEMO || location.hash.startsWith('#portal=') ? SKIP_TO : 0);
   // REANIMATED Part 1: aperture prologue (must exist before compile: clipping + plan lights)
   const useAperture = tl === 0 && !params.has('t') && params.get('aperture') !== '0' && !reduceMotion && !window.NOOK_DEMO;
   if (useAperture) {
@@ -295,18 +304,21 @@ const LensShader = {
   uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uCA: { value: 0.6 }, uVig: { value: 0.85 }, uFade: { value: 0 }, uGrain: { value: 0.028 },
     // REANIMATED Part 3: warm LUT-style grade (lift / gamma / gain + a little split-tone), uGrade 0..1
     uLift: { value: new THREE.Vector3(0.012, 0.0, 0.03) }, uGamma: { value: new THREE.Vector3(0.97, 1.0, 1.04) },
-    uGain: { value: new THREE.Vector3(1.05, 1.0, 0.94) }, uGrade: { value: 1 } },
+    uGain: { value: new THREE.Vector3(1.05, 1.0, 0.94) }, uGrade: { value: 1 }, uPixel: { value: 0 }, uAspect: { value: innerWidth / innerHeight } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
   fragmentShader: `
-    uniform sampler2D tDiffuse; uniform float uTime, uCA, uVig, uFade, uGrain, uGrade; uniform vec3 uLift, uGamma, uGain; varying vec2 vUv;
+    uniform sampler2D tDiffuse; uniform float uTime, uCA, uVig, uFade, uGrain, uGrade, uPixel, uAspect; uniform vec3 uLift, uGamma, uGain; varying vec2 vUv;
     float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
     void main(){
       vec2 c = vUv - 0.5; float d = dot(c, c);
       vec2 off = c * d * uCA * 0.045;
       vec3 col;
-      col.r = texture2D(tDiffuse, vUv + off).r;
-      col.g = texture2D(tDiffuse, vUv).g;
-      col.b = texture2D(tDiffuse, vUv - off).b;
+      vec2 grid = vec2(160.0 * uAspect, 160.0);
+      vec2 uv = mix(vUv, (floor(vUv * grid) + 0.5) / grid, uPixel);
+      col.r = texture2D(tDiffuse, uv + off * (1.0 - uPixel)).r;
+      col.g = texture2D(tDiffuse, uv).g;
+      col.b = texture2D(tDiffuse, uv - off * (1.0 - uPixel)).b;
+      col = mix(col, floor(col * 7.0 + 0.5) / 7.0, uPixel);
       vec3 gr = pow(max(col * uGain + uLift * (1.0 - col), 0.0), uGamma);
       float lum = dot(gr, vec3(0.299, 0.587, 0.114));
       gr += mix(vec3(-0.004, 0.0, 0.018), vec3(0.02, 0.008, -0.012), smoothstep(0.08, 0.6, lum)); // teal shadows, amber highs
@@ -708,9 +720,18 @@ function update(t, dt, snap, cameraDt = dt) {
     string: seg(t, T.swOn + 0.1, T.swOn + 2.3),
     music: Math.max(music, t < T.plug ? 0.04 : 0),
     beatPulse,
+    bands: reduceMotion ? { low: 0, mid: 0, high: 0 } : audio.analyse(),
     arm: smooth(seg(t, T.plug - 0.5, T.plug + 0.2)),
   };
   W.update(clock, dt, L);
+  weather?.update(clock, dt);
+  player?.update(weather.day, renderTier);
+  secretAngle += (secretTarget - secretAngle) * (1 - Math.exp(-dt * 3));
+  W.shelf.rotation.y = -Math.PI / 2 - secretAngle * 1.1;
+  if (lens) {
+    lens.uniforms.uPixel.value = document.body.classList.contains('eight-bit') ? 1 : 0;
+    lens.uniforms.uAspect.value = innerWidth / innerHeight;
+  }
   lightsK = L.lights;
 
   // headphone LEDs + notes
@@ -728,7 +749,7 @@ function update(t, dt, snap, cameraDt = dt) {
 
   // post
   if (bloom) {
-    bloom.strength = 0.5 + 0.12 * music * beatPulse + plugK * 0.9 + L.lights * 0.05;
+    bloom.strength = 0.5 + 0.3 * L.bands.low + 0.15 * L.bands.high + plugK * 0.9 + L.lights * 0.05;
     lens.uniforms.uCA.value = 0.55 + plugK * 3;
   }
 

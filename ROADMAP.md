@@ -69,8 +69,8 @@ The base stays the same: a real-time 3D lo-fi room (Three.js). A character comes
 | 8 | Project City: site plan of every app (grow-in models, hover previews) | S1 | DONE |
 | 9 | The Logbook: editorial cream chapter (timeline, crew, logbook table) | S2 | DONE |
 | 10 | Portal transitions v2 (GLSL, one style per scene) | all | DONE |
-| 11 | Audio-reactive room, mini player, day/night + weather | + | ⏳ TODO |
-| 12 | Hidden layer, mobile/perf/a11y pass, SEO + launch | + | ⏳ TODO |
+| 11 | Audio-reactive room, mini player, day/night + weather | + | DONE |
+| 12 | Hidden layer, mobile/perf/a11y pass, SEO + launch | + | DONE — implementation complete; production Lighthouse targets unverified |
 
 ### New page flow (target after Part 12)
 `Aperture (S1)` → `Intro film` → `Hero / couch` → `Stations (decks)` → `The Catalog (S5)` → `The Shelf (S3)` → `Through the window (S6)` → `Project City (S1)` → `Logbook (S2)` → `Join + Marker guestbook (S4)`
@@ -224,9 +224,12 @@ The base stays the same: a real-time 3D lo-fi room (Three.js). A character comes
 ## Part 11: Audio-reactive + player + day/night/weather
 **Touches:** `audio.js` (bands low/mid/high), `world.js`, new `js/player.js`, `js/atmosphere.js`.
 **Spec:** the string lights, speakers, neon, bloom and topo contours all react to the bands. A mini player with 3 stations, volume and a "lo-fi amount" knob. Time of day follows the local clock. Weather: rain, storm, snow, clear (shooting stars), fog. 3s crossfades. Ambience changes with the weather.
+**Delivered (2026-10-20):** FFT-derived low/mid/high envelopes drive speakers, neon, string lights, bloom and City contours. `player.js` adds three distinct synthesized stations with 3-second gain crossfades, volume, tape warmth/wow/crackle and a synchronized play/pause control. `atmosphere.js` adds a local-clock daylight cycle, five selectable skies, snow drift, storm-only automatic lightning, clear-night shooting stars, fog and crossfading noise ambience. Sound remains gesture-gated; reduced motion disables audio-driven room pulses and shooting stars. Player settings are visit-only; existing device-local discoveries remain unchanged.
 
 ## Part 12: Hidden layer, quality & launch
 **Spec:** achievements (`A`), Konami 8-bit mode, a secret room behind the bookshelf (unlocked when all portals are found), a mini terminal (`` ` ``). Auto-detected quality tiers (low/med/high), a 2D no-WebGL fallback, keyboard paths and a screen-reader portal list. Lighthouse targets: mobile performance 80+, accessibility 95+. OG/Twitter meta, favicon, JSON-LD, `#portal=id` deep links, a `window.nookTrack` hook, and a credits roll. Deploy notes.
+**Delivered (2026-10-20):** `hidden.js` works independently of WebGL: six visit achievements, Konami pixel-grid/color-quantized rendering and square-wave keys, a bookshelf passage unlocked by all seven discoveries with an amber listening-alcove diorama, allowlisted terminal commands, accessible native dialogs and keyboard-pausable credits. Explicit `?view=2d` skips the renderer; `/projects` is a server-rendered, no-JavaScript directory using the same portal config. Hardware/save-data/reduced-motion tier detection complements runtime downgrade. Added skip link, stronger muted-text contrast, corrected animated-heading semantics, portal-dialog tab containment, favicon, social artwork, OG/Twitter metadata, WebSite JSON-LD, direct `#portal=id` previews and safe `window.nookTrack(event,data)` callbacks.
+**Validation / remaining launch checks:** production build, independent TypeScript and whitespace checks; graphics browser checks at 1280×800, 639×638 and 390×844. Verified radio, station/volume/warmth, weather, badges/unlock, terminal, Konami, deep links, credits and 2D/text routes. Axe WCAG 2/2.1 A/AA checks run on the mobile room and utility dialog. Preview lab vitals (`?t=17`, development mode): desktop TTFB 10.8ms, FCP/LCP 452ms, CLS 0; mobile TTFB 15.6ms, FCP/LCP 680ms, CLS 0 (reported rounded). These are not physical-device or Lighthouse scores. No local Chrome binary is available for Lighthouse; performance 80+/accessibility 95+ remain production audit targets, not claimed results. Physical touch/GPU behavior and deployed social-card unfurls still need a real-device/final-domain check. See README launch notes.
 
 ---
 
@@ -242,6 +245,7 @@ The base stays the same: a real-time 3D lo-fi room (Three.js). A character comes
 | Lily (mystery) | https://magnificent-lily-ef7239.netlify.app | returned 401 (password-protected?), so the title is a placeholder |
 
 ## User feedback log
+- 2026-10-20: the user requested “do 11 and 12 in 1 go”. Both implementations are delivered together, preserving Parts 1–10. No next implementation part remains; production Lighthouse and physical-device checks are still open launch validation.
 - 2026-10-20: the user requested “now 8 9 10”. All three are delivered together while preserving Parts 1–7. **Next part = 11.**
 *(Add the user's feedback after every demo. Later parts must respect it.)*
 - v1 Part 1: superseded by the v2 plan. The user asked to "reanimate the complete site using all 6 samples (minimum), rewrite the part-wise plan, build Part 1".

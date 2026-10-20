@@ -31,6 +31,11 @@ export class LofiAudio {
     this.nextStep = 0;
     this.off = null;
     this.musicLive = false;
+    this.volume = 0.7;
+    this.lofi = 0.5;
+    this.station = 0;
+    this.weather = 'rain';
+    this.bands = { low: 0, mid: 0, high: 0 };
   }
 
   /* ---------------- graph ---------------- */
@@ -43,7 +48,7 @@ export class LofiAudio {
     const comp = c.createDynamicsCompressor();
     comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 3.2; comp.attack.value = 0.006; comp.release.value = 0.22;
     this.master.connect(comp); comp.connect(c.destination);
-    this.analyser = c.createAnalyser(); this.analyser.fftSize = 128; this.analyser.smoothingTimeConstant = 0.78;
+    this.analyser = c.createAnalyser(); this.analyser.fftSize = 1024; this.analyser.smoothingTimeConstant = 0.78;
     comp.connect(this.analyser);
     this.freq = new Uint8Array(this.analyser.frequencyBinCount);
 
@@ -60,6 +65,10 @@ export class LofiAudio {
 
     // music bus → tape wow → headphone lowpass → out
     this.music = c.createGain(); this.music.gain.value = 0.9;
+    this.stations = [0, 1, 2].map(i => {
+      const bus = c.createGain(); bus.gain.value = i === this.station ? 1 : 0;
+      bus.connect(this.music); return bus;
+    });
     const wowDelay = c.createDelay(0.05); wowDelay.delayTime.value = 0.012;
     const wow = c.createOscillator(); wow.frequency.value = 0.42;
     const wowAmt = c.createGain(); wowAmt.gain.value = 0.0011;
@@ -70,6 +79,7 @@ export class LofiAudio {
     const warm = c.createBiquadFilter(); warm.type = 'highshelf'; warm.frequency.value = 6500; warm.gain.value = -7;
     this.lp = c.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.frequency.value = 380; this.lp.Q.value = 0.9;
     this.musicOut = c.createGain(); this.musicOut.gain.value = 0;
+    this.warm = warm; this.wowAmount = wowAmt;
     this.wowDelay = wowDelay; // REANIMATED Part 2: turntable pitch dip
     this.music.connect(wowDelay); wowDelay.connect(warm); warm.connect(this.lp); this.lp.connect(this.musicOut);
     this.musicOut.connect(this.master); this.musicOut.connect(this.verbIn);
@@ -123,7 +133,8 @@ export class LofiAudio {
     this.off = null;
     this.sync(tl);
     const g = this.master.gain, now = this.ctx.currentTime;
-    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0.9, now + 0.6);
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(this.volume, now + 0.6);
+    this.setLofi(this.lofi); this.setWeather(this.weather);
   }
 
   disable() {
@@ -148,6 +159,7 @@ export class LofiAudio {
     set(this.crackleGain.gain, live ? 0.06 : 0);
     this.nextStep = Math.ceil((tl - this.musicStart) / this.step);
     this.off = null;
+    this.setLofi(this.lofi); this.setWeather(this.weather);
   }
 
   /* timeline → audio clock (kept stable, re-anchored only on drift) */
@@ -191,6 +203,7 @@ export class LofiAudio {
     lin(this.crackleGain.gain, 0.06, 0.3);
     this._whoosh(t - 0.05);
     this._needle(t);
+    this.setLofi(this.lofi); this.setWeather(this.weather);
   }
 
   level() {
@@ -199,10 +212,68 @@ export class LofiAudio {
     return this.freq;
   }
 
+  setVolume(value) {
+    this.volume = Math.max(0, Math.min(1, Number(value) || 0));
+    if (this.ctx) this.master.gain.setTargetAtTime(this.enabled ? this.volume : 0, this.ctx.currentTime, 0.08);
+  }
+
+  setStation(index) {
+    if (![0, 1, 2].includes(index)) return;
+    this.station = index;
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.stations.forEach((bus, i) => {
+      bus.gain.cancelAndHoldAtTime(now);
+      bus.gain.linearRampToValueAtTime(i === index ? 1 : 0, now + 3);
+    });
+  }
+
+  setLofi(value) {
+    this.lofi = Math.max(0, Math.min(1, Number(value) || 0));
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.warm.gain.setTargetAtTime(-16 * this.lofi, now, 0.2);
+    this.wowAmount.gain.setTargetAtTime(0.0001 + this.lofi * 0.002, now, 0.2);
+    this.crackleGain.gain.setTargetAtTime(this.lofi * 0.12, now, 0.2);
+  }
+
+  setWeather(weather) {
+    this.weather = weather;
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const levels = { rain: 0.12, storm: 0.32, snow: 0.025, clear: 0.008, fog: 0.06 };
+    this.rainGain.gain.setTargetAtTime(levels[weather] ?? 0.12, now, 1);
+    this.rainLP.frequency.setTargetAtTime(weather === 'storm' ? 2600 : weather === 'snow' ? 250 : weather === 'fog' ? 450 : 900, now, 1);
+  }
+
+  analyse() {
+    const data = this.level();
+    for (const [name, start, end] of [['low', 35, 250], ['mid', 250, 2500], ['high', 2500, 12000]]) {
+      let sum = 0, count = 0;
+      if (data) {
+        const hz = this.ctx.sampleRate / this.analyser.fftSize;
+        for (let i = Math.max(1, Math.floor(start / hz)); i < Math.min(data.length, Math.ceil(end / hz)); i++) { sum += data[i] / 255; count++; }
+      }
+      this.bands[name] += ((count ? sum / count : 0) - this.bands[name]) * 0.2;
+    }
+    return this.bands;
+  }
+
   /* ---------------- sequencing ---------------- */
   _playStep(n, when) {
+    this.stations.forEach((bus, index) => {
+      if (bus.gain.value < 0.001 && index !== this.station) return;
+      this.voiceBus = bus; this._stationStep(n, when, index);
+    });
+    this.voiceBus = null;
+  }
+
+  _stationStep(n, when, station) {
+    const shift = [0, -3, 5][station];
+    const pitch = m => mtof(m + shift);
     const s = ((n % 16) + 16) % 16, bar = Math.floor(n / 16), b4 = ((bar % 4) + 4) % 4, ch = PROG[b4];
     const fill = b4 === 3;
+    if (station === 1 && s % 2 === 1) return;
     // drums
     if (s === 0 || s === 10 || (s === 7 && hash(bar) > 0.45)) this._kick(when, s === 7 ? 0.55 : 1);
     if (s === 4 || s === 12) this._snare(when, 1);
@@ -210,17 +281,17 @@ export class LofiAudio {
     if (s % 2 === 0) this._hat(when, s % 4 === 2 ? 1 : 0.6);
     else if (hash(n * 3.1) > 0.7) this._hat(when, 0.3);
     // bass
-    if (s === 0) this._bass(mtof(ch.bass), when, this.beat * 1.6, 1);
-    if (s === 7) this._bass(mtof(ch.bass + 12), when, this.beat * 0.4, 0.6);
-    if (s === 10) this._bass(mtof(ch.bass + 7), when, this.beat * 1.1, 0.85);
-    if (s === 14 && fill) this._bass(mtof(PROG[(b4 + 1) % 4].bass + 1), when, this.beat * 0.45, 0.7);
+    if (s === 0) this._bass(pitch(ch.bass), when, this.beat * 1.6, 1);
+    if (s === 7) this._bass(pitch(ch.bass + 12), when, this.beat * 0.4, 0.6);
+    if (s === 10) this._bass(pitch(ch.bass + 7), when, this.beat * 1.1, 0.85);
+    if (s === 14 && fill) this._bass(pitch(PROG[(b4 + 1) % 4].bass + 1), when, this.beat * 0.45, 0.7);
     // keys
-    if (s === 0) ch.notes.forEach((m, i) => this._ep(mtof(m), when + i * 0.018, this.beat * 3.4, 0.9 - i * 0.08));
-    if (s === 10 && hash(bar * 7) > 0.35) ch.notes.slice(1).forEach((m, i) => this._ep(mtof(m), when + i * 0.014, this.beat * 1.6, 0.45));
+    if (s === 0) ch.notes.forEach((m, i) => this._ep(pitch(m), when + i * 0.018, this.beat * 3.4, 0.9 - i * 0.08));
+    if (s === 10 && hash(bar * 7) > 0.35) ch.notes.slice(1).forEach((m, i) => this._ep(pitch(m), when + i * 0.014, this.beat * 1.6, 0.45));
     // melody plucks
     if ((s === 2 || s === 6 || s === 9 || s === 13) && hash(n * 1.7 + 4) > 0.42) {
       const m = PENTA[Math.floor(hash(n * 2.3) * PENTA.length)];
-      this._pluck(mtof(m), when, 0.55 + hash(n) * 0.3);
+      this._pluck(pitch(m), when, 0.55 + hash(n) * 0.3);
     }
   }
 
@@ -235,12 +306,12 @@ export class LofiAudio {
     o.type = 'sine';
     o.frequency.setValueAtTime(130, when); o.frequency.exponentialRampToValueAtTime(44, when + 0.13);
     this._env(g, when, 0.95 * v, 0.004, 0.34);
-    o.connect(g); g.connect(this.music); o.start(when); o.stop(when + 0.4);
+    o.connect(g); g.connect(this.voiceBus || this.music); o.start(when); o.stop(when + 0.4);
     // beater click
     const n = c.createBufferSource(); n.buffer = this.noise;
     const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400;
     const ng = c.createGain(); this._env(ng, when, 0.12 * v, 0.001, 0.025);
-    n.connect(f); f.connect(ng); ng.connect(this.music); n.start(when, Math.random()); n.stop(when + 0.05);
+    n.connect(f); f.connect(ng); ng.connect(this.voiceBus || this.music); n.start(when, Math.random()); n.stop(when + 0.05);
   }
 
   _snare(when, v) {
@@ -248,19 +319,19 @@ export class LofiAudio {
     const n = c.createBufferSource(); n.buffer = this.noise;
     const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.7;
     const g = c.createGain(); this._env(g, when, 0.34 * v, 0.002, 0.2);
-    n.connect(bp); bp.connect(g); g.connect(this.music); g.connect(this.verbIn);
+    n.connect(bp); bp.connect(g); g.connect(this.voiceBus || this.music);
     n.start(when, Math.random()); n.stop(when + 0.3);
     const o = c.createOscillator(), og = c.createGain(); o.type = 'triangle';
     o.frequency.setValueAtTime(210, when); o.frequency.exponentialRampToValueAtTime(150, when + 0.08);
     this._env(og, when, 0.16 * v, 0.002, 0.09);
-    o.connect(og); og.connect(this.music); o.start(when); o.stop(when + 0.15);
+    o.connect(og); og.connect(this.voiceBus || this.music); o.start(when); o.stop(when + 0.15);
   }
 
   _hat(when, v) {
     const c = this.ctx, n = c.createBufferSource(); n.buffer = this.noise;
     const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7200;
     const g = c.createGain(); this._env(g, when, 0.065 * v, 0.001, 0.045);
-    n.connect(hp); hp.connect(g); g.connect(this.music); n.start(when, Math.random()); n.stop(when + 0.08);
+    n.connect(hp); hp.connect(g); g.connect(this.voiceBus || this.music); n.start(when, Math.random()); n.stop(when + 0.08);
   }
 
   _bass(f, when, dur, v) {
@@ -271,13 +342,13 @@ export class LofiAudio {
     g.gain.linearRampToValueAtTime(0.3 * v, when + 0.012);
     g.gain.exponentialRampToValueAtTime(0.16 * v, when + dur * 0.5);
     g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-    o.connect(lp); lp.connect(g); g.connect(this.music); o.start(when); o.stop(when + dur + 0.05);
+    o.connect(lp); lp.connect(g); g.connect(this.voiceBus || this.music); o.start(when); o.stop(when + dur + 0.05);
   }
 
   _ep(f, when, dur, v) {
     const c = this.ctx;
     const car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain(), g = c.createGain();
-    car.type = 'sine'; car.frequency.value = f;
+    car.type = this.retro ? 'square' : 'sine'; car.frequency.value = f;
     mod.type = 'sine'; mod.frequency.value = f;
     mg.gain.setValueAtTime(f * 1.1 * v, when); mg.gain.exponentialRampToValueAtTime(f * 0.08, when + 0.7);
     mod.connect(mg); mg.connect(car.frequency);
@@ -285,7 +356,7 @@ export class LofiAudio {
     g.gain.linearRampToValueAtTime(0.075 * v, when + 0.01);
     g.gain.exponentialRampToValueAtTime(0.03 * v, when + 0.5);
     g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-    car.connect(g); g.connect(this.music);
+    car.connect(g); g.connect(this.voiceBus || this.music);
     car.start(when); mod.start(when); car.stop(when + dur + 0.05); mod.stop(when + dur + 0.05);
   }
 
@@ -294,7 +365,7 @@ export class LofiAudio {
     o.type = 'sine'; o.frequency.value = f; o2.type = 'triangle'; o2.frequency.value = f * 2.001;
     const g2 = c.createGain(); g2.gain.value = 0.25;
     this._env(g, when, 0.06 * v, 0.004, 0.7);
-    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.music); g.connect(this.verbIn);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.voiceBus || this.music);
     o.start(when); o2.start(when); o.stop(when + 0.8); o2.stop(when + 0.8);
   }
 

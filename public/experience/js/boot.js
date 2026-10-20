@@ -1,4 +1,6 @@
 (() => {
+  window.nookTrack = window.nookTrack || (() => {});
+  import('./hidden.js').then(({ createHiddenLayer }) => { window.nookHidden = createHiddenLayer(); }).catch(() => {});
   let recovered = false;
   const fallback = () => {
     if (recovered) return;
@@ -34,6 +36,7 @@
     button.onclick = fallback;
     document.querySelector('.ld-inner')?.append(button);
   }, 12000);
-  requestAnimationFrame(() => requestAnimationFrame(() => import('./bundle.js').catch(fallback)));
+  if (new URLSearchParams(location.search).get('view') === '2d') { clearTimeout(timer); fallback(); }
+  else requestAnimationFrame(() => requestAnimationFrame(() => import('./bundle.js').catch(fallback)));
   window.addEventListener('nook:ready', () => clearTimeout(timer), { once: true });
 })();
