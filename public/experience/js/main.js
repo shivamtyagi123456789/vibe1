@@ -15,6 +15,9 @@ import { createCatalog } from './catalog.js';
 import { createShelf } from './shelf.js';
 import { createMarker } from './marker.js';
 import { createCanal } from './canal.js';
+import { createCity } from './city.js';
+import { createLogbook } from './logbook.js';
+import { createTransitions } from './transitions.js';
 window.gsap = gsap;
 window.ScrollTrigger = ScrollTrigger;
 window.Lenis = Lenis;
@@ -98,7 +101,7 @@ let renderer, scene, camera, composer, bloom, lens, W, C, phones, notes = [], po
 let ready = false, started = false, failed = false;
 let aperture = null, hud = null, scrollU = 0; // REANIMATED Part 1
 let interact = null, atmos = null, lightsK = 0; // REANIMATED Part 2 + 3
-let catalog = null, shelf = null, marker = null, canal = null;
+let catalog = null, shelf = null, marker = null, canal = null, city = null, logbook = null, transitions = null;
 let dof = null; // REANIMATED Part 3: BokehPass, focus/drawer mode only
 // Explicit tiers stay fixed; automatic mode prioritizes frame pacing over extra effects.
 const autoQuality = !['low', 'med', 'high'].includes(params.get('quality'));
@@ -169,6 +172,8 @@ async function boot() {
   W = buildWorld(scene);
   canal = createCanal({ scene, camera, W, tier: QUALITY, launch: (id, event) => portals?.launch(id, event) });
   window.nookCanal = canal;
+  city = createCity({ scene, camera, canvas, launch: (id, event) => portals?.launch(id, event, 'iris') });
+  window.nookCity = city;
   if (QUALITY !== 'high') {
     scene.traverse((object) => {
       if (object.isLight && object.castShadow) {
@@ -222,7 +227,7 @@ async function boot() {
   // Parallel shader compilation keeps the loader responsive; focus-only passes are deferred.
   await renderer.compileAsync(scene, camera);
   camHeadS.copy(camHead);
-  portals = createPortals({ camera, audio, resolve: (name) => (name === 'phones' ? phones : interact.object(name)) });
+  portals = createPortals({ camera, audio, transitions, resolve: (name) => (name === 'phones' ? phones : interact.object(name)) });
   window.nookPortals = portals; // debug / demo handle
   hud = createHUD({ chapters: CHAPTERS, goto: (id) => scrollToId(id) });
   interact.hud = hud; // Part 2: pill API (read lazily by interact.js)
@@ -243,10 +248,15 @@ async function boot() {
     if (lenis) on ? lenis.stop() : (scrollUnlocked && lenis.start());
   } });
   window.nookMarker = marker;
+  const inkLink = document.querySelector('[data-marker-portal]'), inkApp = portals.list.find(p => p.id === 'turntable');
+  if (inkLink && inkApp) { inkLink.hidden = false; inkLink.href = inkApp.url; inkLink.target = inkApp.newTab ? '_blank' : '_self'; inkLink.rel = 'noopener noreferrer'; inkLink.addEventListener('click', e => portals.launch(inkApp.id, e, 'ink')); }
+  logbook = createLogbook({ launch: (id, event) => portals.launch(id, event) });
+  window.nookLogbook = logbook;
   window.nookAperture = aperture;
   window.nookPerf = () => ({ clock: +clock.toFixed(2), tl: +tl.toFixed(2), started, dofK: dof ? +dof.k.toFixed(2) : 0, dofOn: dof ? dof.pass.enabled : false,
     cam: camera.position.toArray().map((v) => +v.toFixed(2)), look: cam.l.toArray().map((v) => +v.toFixed(2)), fade: +lens.uniforms.uFade.value.toFixed(2),
     lost: renderer.getContext().isContextLost(), dpr: DPR, tier: renderTier,
+    scroll: { actual: window.scrollY, animated: lenis?.animatedScroll, u: scrollU, city: chapterBounds[7] },
     averageFrameMs: +averageFrameMs.toFixed(1) }); // debug
   // debug: step the film deterministically and report the first non-finite camera / rig value
   window.nookScan = (from = 0, to = 17, step = 1 / 60) => {
@@ -343,6 +353,9 @@ function setupPost() {
   composer.addPass(new OutputPass());
   lens = new ShaderPass(LensShader);
   composer.addPass(lens);
+  transitions = createTransitions();
+  composer.addPass(transitions.pass);
+  window.nookTransitions = transitions;
   sizeBloom();
 }
 
@@ -553,6 +566,8 @@ const SHOTS = {
   rooms: { p: [.72, 2.7, -2.1], l: [.72, 2.7, -9], f: 52 },
   mixes: { p: [-0.9, 1.8, -1.3], l: [-2.9, 2.2, -4.5], f: 46 },
   join: { p: [0.6, 2.25, 3.4], l: [0.8, 1.3, -3.2], f: 46 },
+  city: { p: [55, 17, .1], l: [55, .4, 0], f: 48 },
+  logbook: { p: [0.6, 2.25, 3.4], l: [0.8, 1.3, -3.2], f: 46 },
 };
 const SHOTS_P = { // portrait overrides (subject centred, slightly lower)
   stations: { p: [3.6, 2.1, -1.6], l: [4.85, 1.55, -4.05], f: 58 },
@@ -562,7 +577,7 @@ const SHOTS_P = { // portrait overrides (subject centred, slightly lower)
   mixes: { p: [-1.2, 1.7, -0.9], l: [-2.1, 2.05, -4.5], f: 62 },
   join: { p: [0.8, 2.3, 4.2], l: [0.8, 1.5, -3.2], f: 66 },
 };
-const ORDER = ['hero', 'stations', 'catalog', 'shelf', 'rooms', 'mixes', 'join'];
+const ORDER = ['hero', 'stations', 'catalog', 'shelf', 'rooms', 'mixes', 'join', 'city', 'logbook'];
 // REANIMATED Part 1: chapter names for the HUD (scene tag + rail)
 const CHAPTERS = [
   { id: 'hero', title: 'The Couch', scene: 'THE COUCH' },
@@ -572,6 +587,8 @@ const CHAPTERS = [
   { id: 'rooms', title: 'Canal', scene: 'CANALE DI NOOK' },
   { id: 'mixes', title: 'Mixes', scene: 'THE NEON WALL' },
   { id: 'join', title: 'Join', scene: 'THE WIDE SHOT' },
+  { id: 'city', title: 'Project City', scene: 'PROJECT CITY' },
+  { id: 'logbook', title: 'Logbook', scene: 'THE LOGBOOK' },
 ];
 function sceneName() {
   if (aperture && aperture.active) return 'SITE PLAN';
@@ -610,6 +627,7 @@ const measureSections = () => {
   chapterBounds = ORDER.map(id => { const el = document.getElementById(id); return { top: el.offsetTop, height: el.offsetHeight }; });
 };
 measureSections();
+new ResizeObserver(measureSections).observe(document.getElementById('content'));
 
 function scrollShot() {
   const portrait = camera.aspect < 0.9;
@@ -633,6 +651,11 @@ function scrollShot() {
       const blend = smoother(u - 4), next = shotOf('mixes', portrait);
       goal.p.lerp(tmp.d.fromArray(next.p), blend); goal.l.lerp(tmp.e.fromArray(next.l), blend); goal.f = lerp(goal.f, next.f, blend);
     }
+  }
+  if (chapter === 7 && city) {
+    const progress = clamp((sy - bounds.top) / Math.max(1, bounds.height - innerHeight), 0, 1);
+    city.apply(goal, progress);
+    if (u > 7) { const blend = smoother(u - 7), next = shotOf('logbook', portrait); goal.p.lerp(tmp.d.fromArray(next.p), blend); goal.l.lerp(tmp.e.fromArray(next.l), blend); }
   }
   scrollU = u;
   return u;
@@ -899,14 +922,18 @@ function frame(now) {
   if (camera.far !== far) { camera.far = far; camera.updateProjectionMatrix(); }
   const canalLive = tl >= T.reveal && !cutPending && scrollU >= 3.9 && scrollU < 4.98;
   if (canal) canal.update(clock, dt, canalLive);
-  if (marker) marker.update(dt, clock, tl >= T.reveal && scrollU > 5.5 && !cutPending);
+  if (marker) marker.update(dt, clock, tl >= T.reveal && scrollU > 5.5 && scrollU < 6.95 && !cutPending);
+  const cityLive = tl >= T.reveal && !cutPending && scrollU > 6.65 && scrollU < 8;
+  city?.update(Math.min(1, elapsed), cityLive);
+  logbook?.update();
+  transitions?.update();
   composer.render();
   const catalogLive = tl >= T.reveal && !cutPending && Math.abs(scrollU - 2) < .42;
   if (catalog) catalog.update(Math.min(1, elapsed), catalogLive);
-  if (portals) portals.update(dt, tl >= T.reveal && !cutPending && !catalogLive && !shelfLive && !canalLive);
+  if (portals) portals.update(dt, tl >= T.reveal && !cutPending && !catalogLive && !shelfLive && !canalLive && !cityLive && scrollU < 7);
   // REANIMATED Part 2 + 3 (atmos runs before the next render; it only writes uniforms)
   const roomLive = tl >= T.reveal && !cutPending && !apOn && !(portals && portals.open);
-  if (interact) interact.update(dt, roomLive && !catalogLive && !shelfLive && !canalLive);
+  if (interact) interact.update(dt, roomLive && !catalogLive && !shelfLive && !canalLive && !cityLive && scrollU < 7);
   if (atmos) {
     atmos.dust.position.z = shelfLive ? 21 : 0;
     if (shelfLive) atmos.spot(shelf.aim, '#ffd7a8');

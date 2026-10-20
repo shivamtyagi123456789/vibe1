@@ -16,7 +16,7 @@ const smooth = (t) => t * t * (3 - 2 * t);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hostOf = (u) => { try { return new URL(u).host; } catch (e) { return u; } };
 
-export function createPortals({ camera, audio, resolve }) {
+export function createPortals({ camera, audio, resolve, transitions }) {
   const params = new URLSearchParams(location.search);
   const DEBUG = params.get('debug') === 'portals' || window.NOOK_DEMO === true;
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -160,8 +160,9 @@ export function createPortals({ camera, audio, resolve }) {
     card.hidden = false;
     requestAnimationFrame(() => card.classList.add('open'));
     card.querySelector('.pc-enter').addEventListener('click', (e) => {
-      if (!p.newTab) { e.preventDefault(); warp(p, () => { location.href = p.url; }); }
-      else { warp(p, null); } // link opens natively in new tab (no popup blocker), we play the warp here
+      if (warping || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { if (warping) e.preventDefault(); return; }
+      if (!p.newTab) { e.preventDefault(); warp(p, () => { location.href = p.url; }, e); }
+      else { warp(p, null, e); } // link opens natively in new tab (no popup blocker), we play the warp here
     });
     setTimeout(() => card.querySelector('.pc-enter').focus(), 50);
     blip(520, 0.1, 'triangle');
@@ -174,65 +175,17 @@ export function createPortals({ camera, audio, resolve }) {
     s.el.focus({ preventScroll: true });
   }
 
-  /* ---------- warp transition (2D canvas hyperspace) ---------- */
-  const wc = document.createElement('canvas');
-  wc.className = 'portal-warp'; wc.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(wc);
-  const g = wc.getContext('2d');
+  /* ---------- per-portal post-processing transition ---------- */
   let warping = false;
-  function warp(p, done) {
+  function warp(p, done, event, override) {
     if (warping) return;
-    warping = true;
-    const dpr = Math.min(2, devicePixelRatio || 1);
-    wc.width = innerWidth * dpr; wc.height = innerHeight * dpr;
-    wc.classList.add('on');
-    card.classList.add('warping');
-    const cx = wc.width / 2, cy = wc.height / 2;
-    const N = 420, stars = [];
-    for (let i = 0; i < N; i++) stars.push({ a: Math.random() * Math.PI * 2, r: Math.random() * 40 * dpr, s: 0.4 + Math.random() * 1.6, w: (0.5 + Math.random() * 1.5) * dpr, c: Math.random() < 0.5 ? p.color : '#fff3df' });
-    const t0 = performance.now(), OUT = 1300, BACK = 700;
-    blip(180, 0.9, 'sawtooth', 1.2, 1400);
-    const step = (now) => {
-      const t = now - t0;
-      const u = clamp(t / OUT, 0, 1), e = u * u * u;
-      const back = done ? 0 : clamp((t - OUT) / BACK, 0, 1);
-      g.globalCompositeOperation = 'source-over';
-      g.fillStyle = `rgba(11,7,18,${0.35 - e * 0.2})`;
-      g.fillRect(0, 0, wc.width, wc.height);
-      g.globalCompositeOperation = 'lighter';
-      const speed = 2 + e * 90;
-      stars.forEach((st) => {
-        const r0 = st.r; st.r += st.s * speed * dpr;
-        const max = Math.hypot(cx, cy);
-        if (st.r > max) { st.r = Math.random() * 30 * dpr; }
-        g.strokeStyle = st.c; g.globalAlpha = clamp(0.25 + e, 0, 1) * (1 - back);
-        g.lineWidth = st.w;
-        g.beginPath();
-        g.moveTo(cx + Math.cos(st.a) * r0, cy + Math.sin(st.a) * r0);
-        g.lineTo(cx + Math.cos(st.a) * st.r, cy + Math.sin(st.a) * st.r);
-        g.stroke();
-      });
-      g.globalAlpha = 1;
-      // central tunnel glow → whiteout
-      const rg = g.createRadialGradient(cx, cy, 0, cx, cy, Math.max(cx, cy) * (0.2 + e * 1.4));
-      rg.addColorStop(0, `rgba(255,243,223,${e * 0.9 * (1 - back)})`);
-      rg.addColorStop(0.35, hexA(p.color, e * 0.55 * (1 - back)));
-      rg.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = rg; g.fillRect(0, 0, wc.width, wc.height);
-      if (t < OUT || (!done && back < 1)) requestAnimationFrame(step);
-      else if (done) done();
-      if (!done && back >= 1) {
-        wc.classList.remove('on'); card.classList.remove('warping'); warping = false;
-        g.clearRect(0, 0, wc.width, wc.height); closeCard();
-        showToast(`<span>↗ opened in a new tab</span><b>${esc(p.title)}</b>`, p.color);
-      }
-    };
-    requestAnimationFrame(step);
+    const target = event?.currentTarget?.getBoundingClientRect?.();
+    const center = { x: event?.clientX ? event.clientX / innerWidth : target ? (target.x + target.width / 2) / innerWidth : .5, y: event?.clientY ? event.clientY / innerHeight : target ? (target.y + target.height / 2) / innerHeight : .5 };
+    warping = transitions.play({ ...p, transition: override || p.transition }, done, center, () => {
+      warping = false; closeCard();
+    });
+    if (warping) blip(180, .6, 'sine', .4, 700);
   }
-  const hexA = (hex, a) => {
-    const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${clamp(a, 0, 1)})`;
-  };
 
   /* ---------- tiny synth blips (only when the user enabled sound) ---------- */
   function blip(freq, dur = 0.08, type = 'sine', vol = 0.35, toFreq) {
@@ -296,12 +249,14 @@ export function createPortals({ camera, audio, resolve }) {
   }
 
   // REANIMATED Part 4: the catalog's "Open" button plays the same warp (and counts as a discovery)
-  function launch(id, ev) {
+  function launch(id, ev, transition) {
     const s = spots.find((x) => x.p.id === id);
     if (!s) return;
+    if (warping) { ev?.preventDefault(); return; }
     discover(s);
-    if (!s.p.newTab) { if (ev) ev.preventDefault(); warp(s.p, () => { location.href = s.p.url; }); }
-    else warp(s.p, null); // the <a target=_blank> opens natively (no popup blocker)
+    if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey || ev?.altKey) return;
+    if (!s.p.newTab) { if (ev) ev.preventDefault(); warp(s.p, () => { location.href = s.p.url; }, ev, transition); }
+    else warp(s.p, null, ev, transition); // the <a target=_blank> opens natively (no popup blocker)
   }
 
   return { update, scan, list, found, launch, isFound: (id) => found.has(id), get open() { return !!openCard || warping; }, _debug: () => ({ W: innerWidth, H: innerHeight, active, scanT, DEBUG, openCard: !!openCard, spots: spots.map((s) => [s.p.id, s.onScreen, +s.vis.toFixed(2)]) }) };

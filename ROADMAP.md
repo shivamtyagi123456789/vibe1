@@ -66,9 +66,9 @@ The base stays the same: a real-time 3D lo-fi room (Three.js). A character comes
 | 5 | The Shelf: book-spine carousel + giant wordmark | S3 | DONE — preserved from live deployment |
 | 6 | The Marker: pick up a 3D marker, ink on the page | S4 | DONE |
 | 7 | Through the window: night canal world + foreground wipes | S6 | DONE |
-| 8 | Project City: site plan of every app (grow-in models, hover previews) | S1 | ⏳ TODO |
-| 9 | The Logbook: editorial cream chapter (timeline, crew, logbook table) | S2 | ⏳ TODO |
-| 10 | Portal transitions v2 (GLSL, one style per scene) | all | ⏳ TODO |
+| 8 | Project City: site plan of every app (grow-in models, hover previews) | S1 | DONE |
+| 9 | The Logbook: editorial cream chapter (timeline, crew, logbook table) | S2 | DONE |
+| 10 | Portal transitions v2 (GLSL, one style per scene) | all | DONE |
 | 11 | Audio-reactive room, mini player, day/night + weather | + | ⏳ TODO |
 | 12 | Hidden layer, mobile/perf/a11y pass, SEO + launch | + | ⏳ TODO |
 
@@ -196,15 +196,30 @@ The base stays the same: a real-time 3D lo-fi room (Three.js). A character comes
 **Spec:** a circular plot (the void again) where **each app is a small procedural building** (shape picked by category). The buildings grow up on enter (clipping or scale-Y, stagger). Top-down → angled camera. A "0X | 07 MODELS" index with **Previous / Open the model / Next**. Hovering a building shows a pop-up card (S1 photo pop-up) with the app's color cover plus its live host. Click opens the portal.
 **Done when:** every app is a building and the index nav cycles them with camera moves.
 
+**Status: DONE (2026-10-20).**
+**Delivered:** `city.js`, the `#city` chapter and `chapters-8-10.css`. Seven procedural models (fort, archive, clocktower, dashboard towers, signal hall, record pavilion and mystery lantern), circular plot/rim, staggered growth and scroll-driven top-down-to-angle tilt. Reuses aperture noise and marching-squares primitives. Numbered buttons and wrapping Previous/Next update the selected camera focus and portal link; raycast hover shows projected cover/host cards, and direct clicks launch portals. All project data comes from the shared config.
+**Verified:** desktop 1280px, current-preview 639px and mobile 390px rendering; model selection/wrap, camera tilt, hover raycast and shared-config links. Mobile plot fits inside the viewport.
+**Leftovers:** covers and buildings are procedural artwork, not photographs or imported models. Physical touch hardware and representative GPU performance are unmeasured.
+
 ## Part 9: The Logbook
 **Samples:** S2 (tidewend Logbook + Crew).
 **Touches:** `index.html` (new cream editorial chapter `#logbook`), `style.css` (cream `#f4ecdc` theme, a scrim covering the 3D view), new `js/logbook.js`.
 **Spec:** a hard cut from the night room into a cream editorial page. A "THE LOGBOOK" table of apps (PROJECT / FROM / STACK / YEAR). Hovering a row draws its SVG route line. "SAIL WITH THE CREW" becomes a list of skills/roles with a **red dot that glides** along a vertical timeline to the hovered role. Stagger reveals plus clip-path image (cover) reveals.
 **Done when:** it reads as a premium editorial section and scrolling back up returns to the night room with a smooth fade.
 
+**Status: DONE (2026-10-20).**
+**Delivered:** `logbook.js` and the cream `#logbook` chapter: project/host/stack/year table, hover/focus SVG route draws and clip-path cover reveals, staggered intersection reveals, five skill/role controls with a sliding red timeline dot, and a back-to-room link. Header chrome switches to ink-on-cream; a reversible scrim fades between the editorial page and the night scene. Mobile shows stack notes beneath project titles instead of dropping the metadata.
+**Verified:** desktop and 390px table/crew layout, route and cover reveal, crew hover state/dot position, no horizontal overflow, and return to the night room with the cream scrim fully cleared.
+**Leftovers:** metadata is inherited from the owner's catalog and remains self-described; no claims that guessed stacks/dates were independently verified.
+
 ## Part 10: Portal transitions v2
 **Touches:** `main.js` post chain (`TransitionPass` ShaderPass), `portals.js`, new `js/transitions.js`.
 **Spec:** uniforms `uProgress, uType, uColor, uCenter`. Types: `warp` (radial zoom + chromatic split), `vinyl` (groove swirl), `rain` (melt), `glitch`, `ink` (noise dissolve, used by the Marker), `iris` (the S1 void closes onto the hotspot), `drawer` (the S5 slide-and-dolly whiteout), `canal` (S6 ripple). Per-portal `transition`. A reverse transition plus a "welcome back" toast on return. Reduced motion falls back to a fade.
+
+**Status: DONE (2026-10-20).**
+**Delivered:** `transitions.js`, replacing the old canvas-star warp with a final compositor ShaderPass and DOM departure veil. Live uniforms: progress/type/color/center; all eight GLSL styles are implemented. Portal config selects the default; Catalog, City and Marker apply drawer/iris/ink context overrides. Native new-tab links retain their user gesture, same-tab departures wait for the shader, and focus/visibility/pageshow plus guarded session storage restore a reverse transition and welcome-back toast. Reduced motion uses a short fade.
+**Verified:** all eight shader paths enable the expected live uniforms and reset cleanly without browser shader errors; live City link opens the configured app and returning shows the welcome-back toast; medium-quality reduced-motion mode builds all seven models immediately and uses the fade uniform. Production build, standalone TypeScript check and whitespace check pass.
+**Leftovers:** cross-origin tabs remain native browser navigation; the app does not inspect external app contents or control the destination. Automated graphics rendering is not a physical-GPU performance benchmark.
 
 ## Part 11: Audio-reactive + player + day/night/weather
 **Touches:** `audio.js` (bands low/mid/high), `world.js`, new `js/player.js`, `js/atmosphere.js`.
@@ -227,6 +242,7 @@ The base stays the same: a real-time 3D lo-fi room (Three.js). A character comes
 | Lily (mystery) | https://magnificent-lily-ef7239.netlify.app | returned 401 (password-protected?), so the title is a placeholder |
 
 ## User feedback log
+- 2026-10-20: the user requested “now 8 9 10”. All three are delivered together while preserving Parts 1–7. **Next part = 11.**
 *(Add the user's feedback after every demo. Later parts must respect it.)*
 - v1 Part 1: superseded by the v2 plan. The user asked to "reanimate the complete site using all 6 samples (minimum), rewrite the part-wise plan, build Part 1".
 - v2 Part 1: awaiting feedback.

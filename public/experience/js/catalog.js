@@ -118,7 +118,7 @@ export function createCatalog({ cabinet, camera, canvas, portals, hud, audio, on
     detail.querySelector('.cd-close').onclick = close;
     detail.querySelector('.cd-prev').onclick = () => open((selected + apps.length - 1) % apps.length);
     detail.querySelector('.cd-next').onclick = () => open((selected + 1) % apps.length);
-    detail.querySelector('.cd-launch')?.addEventListener('click', e => portals.launch(app.id, e));
+    detail.querySelector('.cd-launch')?.addEventListener('click', e => portals.launch(app.id, e, 'drawer'));
     detail.querySelector('.cd-find')?.addEventListener('click', () => { close(); goto('hero'); setTimeout(() => portals.scan(), 1500); });
   }
   function open(i, source) {

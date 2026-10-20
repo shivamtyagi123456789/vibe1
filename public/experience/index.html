@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Vibes — Plug in. Sink in.</title>
-<meta name="description" content="A cinematic lo-fi room with hidden portals, a project catalog, 3D books, a moonlit canal and your own locally saved felt-tip doodles." />
+<meta name="description" content="A cinematic lo-fi room, moonlit canal, procedural Project City and cream editorial Logbook. Explore seven projects through hidden portals with bespoke transitions." />
 <meta name="theme-color" content="#0b0712" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/catalog.css" />
 <link rel="stylesheet" href="css/shelf.css" />
 <link rel="stylesheet" href="css/chapters-6-7.css" />
+<link rel="stylesheet" href="css/chapters-8-10.css" />
 <link rel="modulepreload" href="js/bundle.js" />
 <script src="js/boot.js" defer></script>
 </head>
@@ -36,7 +37,7 @@
 <header class="topbar">
   <a class="brand magnetic" href="#hero" data-goto="hero" aria-label="Vibes home"><span class="brand-dot"></span>Vibes</a>
   <nav class="nav" aria-label="Main">
-    <a href="#stations" data-goto="stations" data-pill="The Decks|01">Stations</a><a href="#catalog" data-goto="catalog" data-pill="The Catalog|PROJECTS">Catalog</a><a href="#shelf" data-goto="shelf" data-pill="The Shelf|EDITIONS">Shelf</a><a href="#rooms" data-goto="rooms" data-pill="The Window|02">Rooms</a><a href="#mixes" data-goto="mixes" data-pill="The Neon Wall|03">Mixes</a><a href="#join" data-goto="join" data-pill="The Wide Shot|04">About</a>
+    <a href="#stations" data-goto="stations" data-pill="The Decks|01">Stations</a><a href="#catalog" data-goto="catalog" data-pill="The Catalog|PROJECTS">Catalog</a><a href="#shelf" data-goto="shelf" data-pill="The Shelf|EDITIONS">Shelf</a><a href="#rooms" data-goto="rooms" data-pill="The Window|02">Rooms</a><a href="#mixes" data-goto="mixes" data-pill="The Neon Wall|03">Mixes</a><a href="#join" data-goto="join" data-pill="The Wide Shot|04">About</a><a href="#city" data-goto="city">City</a><a href="#logbook" data-goto="logbook">Logbook</a>
   </nav>
   <div class="meta">
     <span class="live"><i></i>LIVE</span>
@@ -156,8 +157,31 @@
       <div class="cta rs">
         <a href="#" class="btn primary magnetic" data-sound-on><span>Start listening</span> <b aria-hidden="true">→</b></a>
         <a href="#hero" class="btn ghost magnetic" data-goto="hero"><span>Back to the couch</span></a>
+        <a class="btn ghost" data-marker-portal hidden><span>Follow the ink</span> <b aria-hidden="true">→</b></a>
       </div>
       <p class="fine rs">Vibes © 2026 · made with Three.js &amp; Web Audio — every sound is synthesized live in your browser.</p>
+    </div>
+  </section>
+  <section class="chapter city-chapter" id="city" aria-labelledby="cityTitle">
+    <div class="city-stage">
+      <canvas class="city-contours" aria-hidden="true"></canvas>
+      <div class="city-heading"><p class="eyebrow">07 — PROJECT CITY / A STUDY IN SMALL WORLDS</p><h2 id="cityTitle">Every idea.<br><em>An address.</em></h2><p>Seven projects, one little neighbourhood.<br>Pick a building. See what lives inside.</p></div>
+      <div class="city-models" role="group" aria-label="Select a project building"></div>
+      <article class="city-card" aria-live="polite"><div class="city-cover" aria-hidden="true"><span></span></div><div><p class="city-category"></p><h3></h3><p class="city-host"></p></div></article>
+      <div class="city-footer"><p class="city-index" aria-live="polite"></p><div class="city-controls"><button type="button" data-city="prev" aria-label="Previous model">Previous</button><a class="city-open" href="#">Open the model <span aria-hidden="true">→</span></a><button type="button" data-city="next" aria-label="Next model">Next</button></div></div>
+    </div>
+  </section>
+
+  <section class="chapter logbook-chapter" id="logbook" aria-labelledby="logbookTitle">
+    <div class="logbook-inner">
+      <header class="logbook-heading"><p>08 / FIELD NOTES<br>GWALIOR · THE OPEN WEB</p><span class="logbook-seal" aria-hidden="true">V / 26</span><p>INDEPENDENT PROJECTS<br>AN ONGOING COLLECTION</p></header>
+      <p class="logbook-kicker">SMALL IDEAS. REAL DESTINATIONS.</p>
+      <h2 id="logbookTitle">THE <em>LOGBOOK</em><span aria-hidden="true">(07)</span></h2>
+      <div class="logbook-deck"><p>A record of things made,<br>and places they took us.</p><p>From a fort in Gwalior to a quiet corner of the internet. A few experiments in making the web feel a little more human.</p></div>
+      <div class="logbook-table-wrap"><table class="logbook-table"><caption class="visually-hidden">Selected projects, hosts, technologies and years</caption><thead><tr><th scope="col">PROJECT</th><th scope="col">FROM</th><th scope="col">STACK</th><th scope="col">YEAR</th></tr></thead><tbody></tbody></table></div>
+      <p class="logbook-footnote">Project notes are from the owner’s catalog. Technologies and dates are self-described, not independently verified.</p>
+      <div class="crew"><div class="crew-intro"><p class="logbook-kicker">THE HANDS BEHIND THE WORK</p><h3>SAIL WITH<br>THE <em>CREW.</em></h3><p>Different hats. The same curiosity.<br>A practice built one project at a time.</p><div class="logbook-cover" aria-hidden="true"><span>VIBES<br>FIELD<br>NOTES.</span><small>VOL. 01 / 2026</small></div></div><div class="crew-timeline"><i class="crew-dot" aria-hidden="true"></i><div class="crew-roles"></div></div></div>
+      <footer class="logbook-footer"><a href="#hero" data-goto="hero">Back to the night room <span aria-hidden="true">→</span></a><p>VIBES © 2026<br>BUILT WITH CARE. BEST AFTER DARK.</p><span>END OF NOTES / NOT THE STORY.</span></footer>
     </div>
   </section>
 </main>

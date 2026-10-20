@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Vibes — Plug in. Sink in.',
-  description: 'A cinematic lo-fi room, hidden project portals, a moonlit canal and a felt-tip doodle guestbook.',
+  description: 'Explore a cinematic lo-fi room, a moonlit canal, a procedural Project City and an editorial Logbook, connected by hidden project portals.',
   generator: 'v0.app',
   icons: {
     icon: [

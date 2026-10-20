@@ -42,7 +42,7 @@ export const ANCHORS = {
 
 export const PORTALS = [
   {
-    id: 'window',
+    id: 'window', transition: 'canal',
     anchor: ANCHORS.window,
     title: 'Beyond the Fort',
     tagline: 'Gwalior heritage events & verified guides, crowd-aware.',
@@ -57,7 +57,7 @@ export const PORTALS = [
     cover: ['#2a1b0e', '#ffc56b', '#fff3df'], hint: 'Look out of the rainy window. The fort is out there somewhere.',
   },
   {
-    id: 'neon',
+    id: 'neon', transition: 'glitch',
     anchor: ANCHORS.neon,
     title: 'ERRATA',
     tagline: 'The Failing Archive: a glitchy collection of beautiful mistakes.',
@@ -72,7 +72,7 @@ export const PORTALS = [
     cover: ['#1a0a12', '#ff4f7b', '#fff3df'], hint: 'Something pink hums on the wall.',
   },
   {
-    id: 'bookshelf',
+    id: 'bookshelf', transition: 'iris',
     anchor: ANCHORS.bookshelf,
     title: 'Amon',
     tagline: 'A timetable that is honest about today: classes, cancellations, notes.',
@@ -87,7 +87,7 @@ export const PORTALS = [
     cover: ['#0e2626', '#5fd4cf', '#fff3df'], hint: 'Every good timetable starts on the bookshelf.',
   },
   {
-    id: 'posterA',
+    id: 'posterA', transition: 'warp',
     anchor: ANCHORS.posterA,
     title: 'UniDash',
     tagline: 'One dashboard for uni life.',
@@ -102,7 +102,7 @@ export const PORTALS = [
     cover: ['#1c1430', '#c6a2ff', '#ffc56b'], hint: 'The big poster to the right of the window.',
   },
   {
-    id: 'mug',
+    id: 'mug', transition: 'rain',
     anchor: ANCHORS.mug,
     title: 'Traffic Light',
     tagline: 'Red, amber, green: the presentation, built for the web.',
@@ -117,7 +117,7 @@ export const PORTALS = [
     cover: ['#2a0f16', '#ff7a95', '#5fd4cf'], hint: 'Still warm, on the coffee table.',
   },
   {
-    id: 'turntable',
+    id: 'turntable', transition: 'vinyl',
     anchor: 'turntable',
     fallback: [5.05, 1.6, -4.0],
     title: 'nook v1',
@@ -133,7 +133,7 @@ export const PORTALS = [
     cover: ['#20140a', '#f0a35e', '#ff4f7b'], hint: 'Drop the needle on the record player.',
   },
   {
-    id: 'lamp',
+    id: 'lamp', transition: 'ink',
     anchor: ANCHORS.lamp,
     title: 'Lily',
     tagline: 'A little light in the corner, still under wraps.',

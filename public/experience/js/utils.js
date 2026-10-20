@@ -14,6 +14,7 @@ export const TAU = Math.PI * 2;
 const safeStorage = (name) => ({
   getItem(key) { try { return window[name].getItem(key); } catch { return null; } },
   setItem(key, value) { try { window[name].setItem(key, value); } catch { /* Storage may be blocked in private or embedded browsers. */ } },
+removeItem(key) { try { window[name].removeItem(key); } catch { /* Storage may be blocked in private or embedded browsers. */ } },
 });
 export const safeLocal = safeStorage('localStorage');
 export const safeSession = safeStorage('sessionStorage');

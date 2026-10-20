@@ -2,10 +2,16 @@
 
 A real-time 3D landing page (Three.js 0.160 + GSAP + Lenis + Web Audio). A character comes home, puts on headphones and sinks into the couch. Then the site opens into a scrollable experience with **hidden secret portals** that open the owner's other apps.
 
-**Upgrade plan: see [`ROADMAP.md`](ROADMAP.md)** (12 parts plus a status board) and [`SAMPLES.md`](SAMPLES.md) (the reference-video bible). Any AI can continue by being told "next part". **Next = Part 8: Project City.** Parts 4–5 are preserved from the live Vibes deployment; Parts 6–7 are now implemented.
+**Upgrade plan: see [`ROADMAP.md`](ROADMAP.md)** (12 parts plus a status board) and [`SAMPLES.md`](SAMPLES.md) (the reference-video bible). Any AI can continue by being told "next part". **Next = Part 11: Audio-reactive room, player and atmosphere.** Parts 4–5 are preserved from the live Vibes deployment; Parts 6–10 are now implemented.
 
 ## Current project layout
 The working static experience lives in `public/experience/`. The Next.js root forwards to `/experience/index.html` and preserves query flags. Source ES modules remain editable in `public/experience/js/`; the package scripts bundle them into `bundle.js` for self-contained delivery with no runtime CDN dependency. The deployed Parts 1–5 source, including Catalog and Shelf, was restored from `vanguard-psi-red.vercel.app/experience/` rather than replaced with the older attachments.
+
+## Parts 8–10 delivered
+- Project City: seven category-specific procedural buildings on a circular plot, shared aperture contours, staggered growth, reversible top-down/angled camera, raycast cover/host previews, accessible model selection and wrapping Previous/Next navigation. Buildings and links use the shared portal discovery engine.
+- Logbook: cream editorial chapter with a seven-project table, host/stack/year metadata, SVG route draws and procedural cover reveals. A five-role crew timeline has a moving red dot. Mobile stacks remain visible under project names; scrolling upward fades back to the night room.
+- Transitions: a final ShaderPass with warp, vinyl, rain, glitch, ink, iris, drawer and canal styles. Per-portal styles live in `portals.config.js`; drawers use drawer, city uses iris, and the Marker’s Follow the ink link uses ink. Native new-tab links remain intact; focus/visibility and session-scoped return state drive reverse transitions and welcome-back messages. Reduced motion uses a fade.
+- Verified in graphics-enabled browsers at 1280×800, 639×638 and 390×844: model cycling, angled camera, building hover, table/cover reveals, crew timeline, live new-tab departure/return, all eight shader paths and reduced-motion fallback. Production build, standalone TypeScript check and whitespace checks pass. Physical touch hardware and representative GPU performance have not been measured.
 
 ## Parts 6–7 delivered
 - Marker: procedural 3D pen/holder, spring cursor following, variable-width strokes, word circling, eraser/undo/clear, keyboard circle action, Esc and pointer-cancel cleanup, device-local vector saves.
