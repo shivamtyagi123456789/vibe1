@@ -1,0 +1,67 @@
+/* REANIMATED PARTS 6 + 7 */
+.canal-chapter { height: 320vh; min-height: 320vh; display: block; padding: 0; position: relative; }
+.canal-caption { position: sticky; top: 55vh; width: min(540px, 85vw); margin-left: clamp(24px, 8vw, 130px); padding-bottom: 40px; text-shadow: 0 2px 30px #0b0712; }
+.canal-caption h2 { font: 400 clamp(42px, 5.7vw, 80px)/1 var(--serif); letter-spacing: -.045em; }
+.canal-caption h2 em { color: var(--amber); }
+.canal-caption > p:not(.eyebrow) { margin-top: 20px; color: var(--ink-2); font-size: 13px; line-height: 1.8; }
+.canal-caption .canal-scroll { font: 10px ui-monospace, monospace; letter-spacing: .2em; }
+.canal-scroll span { display: inline-block; margin-left: 24px; color: var(--amber); }
+.canal-coordinates { position: absolute; right: 5vw; top: 85vh; font: 9px/1.8 ui-monospace, monospace; letter-spacing: .2em; color: var(--ink-2); }
+.canal-portal { position: fixed; left: 0; top: 0; z-index: 18; width: 48px; height: 48px; border: 1px solid var(--amber); border-radius: 4px; background: rgba(11, 7, 18, .65); display: grid; place-items: center; backdrop-filter: blur(8px); transition: background .25s, opacity .3s; }
+.canal-portal[hidden] { display: none; }
+.canal-portal:hover, .canal-portal:focus-visible { background: #ffc56b; color: #0b0712; }
+.canal-portal span { font-size: 24px; }
+.canal-portal small { position: absolute; top: 54px; width: 180px; text-align: center; font: 9px/1.6 ui-monospace, monospace; letter-spacing: .12em; color: var(--ink); text-shadow: 0 2px 8px #000; }
+body.in-canal .np { opacity: 0; pointer-events: none; }
+body.in-canal .scrim { opacity: .12; }
+body.in-canal .portal-hud { opacity: 0; pointer-events: none; }
+#join { height: auto; min-height: 112vh; padding-top: 130px; padding-bottom: 150px; }
+#join .marker-board { position: relative; isolation: isolate; width: min(790px, 100%); min-height: 580px; padding: clamp(24px, 4vw, 52px); border-radius: 16px; background: rgba(24, 15, 36, .9); overflow: hidden; }
+.marker-board::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .22; background-image: radial-gradient(var(--ink-3) .7px, transparent .7px); background-size: 20px 20px; pointer-events: none; }
+.marker-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.marker-heading .eyebrow { text-align: left; font-size: 9px; }
+.marker-status { font: 8px/1.6 ui-monospace, monospace; letter-spacing: .09em; color: var(--teal); text-align: right; max-width: 180px; }
+#join .marker-board h2 { font-size: clamp(46px, 6vw, 76px); margin-top: 22px; }
+[data-marker-word] { display: inline-block; }
+#join .marker-board > p:not(.fine):not(.marker-privacy) { max-width: 500px; margin-inline: auto; }
+#join .marker-board .marker-invite { margin-top: 16px; color: var(--ink-3); font-size: 12px; }
+.marker-space { min-height: 70px; display: flex; align-items: center; justify-content: center; }
+.marker-space span { font: 8px ui-monospace, monospace; letter-spacing: .2em; opacity: .25; }
+.marker-ink { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; mix-blend-mode: normal; }
+.marker-active .marker-ink { pointer-events: auto; touch-action: none; cursor: crosshair; }
+.marker-erasing .marker-ink { cursor: cell; }
+.marker-object { position: absolute; left: 0; top: 0; width: 130px; height: 180px; z-index: 6; pointer-events: none; }
+.marker-dock { position: relative; z-index: 7; display: flex; gap: 4px; align-items: center; justify-content: center; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; padding: 6px; background: #100b18; }
+.marker-dock button { min-height: 40px; padding: 8px 12px; font-size: 11px; border-radius: 6px; color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.marker-dock button[hidden] { display: none; }
+.marker-dock button[aria-pressed=true] { color: var(--ink); background: rgba(255, 79, 123, .16); }
+.marker-dock button:hover { background: rgba(255, 243, 223, .07); }
+.marker-swatch { width: 8px; height: 8px; background: var(--pink); border-radius: 50%; }
+.marker-dock kbd { font: 8px ui-monospace, monospace; opacity: .5; }
+#join .marker-privacy { margin-top: 12px; font-size: 9px; color: var(--ink-3); }
+html.marker-drawing, html.marker-drawing body { overflow: hidden !important; }
+body.marker-hand .cursor { display: none; }
+.marker-active ~ .cta { pointer-events: none; }
+#join .fine { font-size: 10px !important; }
+@media (max-width: 759px) {
+  .canal-caption { top: 62vh; margin-left: 24px; width: calc(100% - 48px); }
+  .canal-caption h2 { font-size: 44px; }
+  .canal-caption > p:not(.eyebrow) { font-size: 11px; margin-top: 12px; }
+  .canal-caption .eyebrow { font-size: 8px; }
+  .canal-coordinates { display: none; }
+  #join { padding: 100px 16px 180px; min-height: 120vh; }
+  #join .marker-board { padding: 24px 18px; }
+  .marker-heading { gap: 12px; }
+  .marker-status { max-width: 100px; font-size: 7px; }
+  #join .marker-board h2 { font-size: 48px; }
+  .marker-dock { gap: 2px; }
+  .marker-dock button { font-size: 10px; padding: 8px; min-height: 44px; }
+  .marker-space { min-height: 100px; }
+  .marker-board .cta { gap: 8px; }
+  .marker-board .btn { font-size: 11px; padding: 12px 14px; }
+  .canal-portal small { font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .canal-chapter { height: 180vh; min-height: 180vh; }
+  .canal-portal { transition: none; }
+}

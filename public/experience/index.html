@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" class="locked">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibes — Plug in. Sink in.</title>
+<meta name="description" content="A cinematic lo-fi room with hidden portals, a project catalog, 3D books, a moonlit canal and your own locally saved felt-tip doodles." />
+<meta name="theme-color" content="#0b0712" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Inter:wght@300;400;500;600&family=Pacifico&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/catalog.css" />
+<link rel="stylesheet" href="css/shelf.css" />
+<link rel="stylesheet" href="css/chapters-6-7.css" />
+<link rel="modulepreload" href="js/bundle.js" />
+<script src="js/boot.js" defer></script>
+</head>
+<body class="intro">
+
+<!-- Loader -->
+<div id="loader" aria-live="polite">
+  <div class="ld-inner">
+    <div class="ld-vinyl"><i></i></div>
+    <p class="ld-brand">Vibes</p>
+    <div class="ld-bar"><i id="ldBar"></i></div>
+    <p class="ld-pct"><span id="ldPct">0</span>% — tuning the room</p>
+  </div>
+</div>
+
+<canvas id="gl" aria-label="Real-time 3D lo-fi room, project catalog and interactive bookshelf. Use the labeled chapter and book buttons to explore." role="img"></canvas>
+
+<div class="bars" aria-hidden="true"><span class="bar top"></span><span class="bar bottom"></span></div>
+<div class="scrim" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand magnetic" href="#hero" data-goto="hero" aria-label="Vibes home"><span class="brand-dot"></span>Vibes</a>
+  <nav class="nav" aria-label="Main">
+    <a href="#stations" data-goto="stations" data-pill="The Decks|01">Stations</a><a href="#catalog" data-goto="catalog" data-pill="The Catalog|PROJECTS">Catalog</a><a href="#shelf" data-goto="shelf" data-pill="The Shelf|EDITIONS">Shelf</a><a href="#rooms" data-goto="rooms" data-pill="The Window|02">Rooms</a><a href="#mixes" data-goto="mixes" data-pill="The Neon Wall|03">Mixes</a><a href="#join" data-goto="join" data-pill="The Wide Shot|04">About</a>
+  </nav>
+  <div class="meta">
+    <span class="live"><i></i>LIVE</span>
+    <span class="clock" id="clock">22:47</span>
+    <button id="soundBtn" class="sound magnetic" type="button" aria-pressed="false" aria-label="Toggle sound">
+      <span class="sbars"><i></i><i></i><i></i><i></i></span><em>Sound off</em>
+    </button>
+  </div>
+</header>
+
+<div class="caption" id="caption" aria-hidden="true">
+  <span class="tc" id="tc">00:00:00</span><span class="cap" id="capText"></span>
+</div>
+
+<main id="content">
+  <section class="hero" id="hero" aria-labelledby="heroTitle">
+    <p class="kicker rv"><span class="eqmini"><i></i><i></i><i></i><i></i></span>Now streaming · late-night lo-fi</p>
+    <h1 id="heroTitle"><span class="line" data-split>Plug in.</span><span class="line em" data-split>Sink in.</span></h1>
+    <p class="lead rv">A cozy corner of the internet to slow down, tune out the noise and let the music do the rest.</p>
+    <div class="cta rv">
+      <a href="#stations" class="btn primary magnetic" data-sound-on data-goto="stations"><span>Start listening</span> <b aria-hidden="true">→</b></a>
+      <a href="#rooms" class="btn ghost magnetic" data-goto="rooms"><span>Explore rooms</span></a>
+    </div>
+    <ul class="stats rv">
+      <li><strong data-count="24">0</strong><span>/7 live rooms</span></li>
+      <li><strong data-count="1.2" data-dec="1" data-suf="M">0</strong><span>night owls</span></li>
+      <li><strong data-count="84">0</strong><span>bpm, always</span></li>
+    </ul>
+    <p class="scroll-hint rv" aria-hidden="true"><i></i>scroll to look around</p>
+  </section>
+
+  <section class="chapter right" id="stations" aria-labelledby="stTitle">
+    <div class="panel">
+      <p class="eyebrow rs">01 — Stations</p>
+      <h2 id="stTitle" class="rs">Needle down, <em>world off.</em></h2>
+      <p class="rs">Hand-picked stations that never shuffle you out of the mood. Every track is mastered warm, every transition seamless.</p>
+      <ul class="list rs">
+        <li><b>midnight vibes</b><span>jazzhop · 84 bpm</span></li>
+        <li><b>rainy window</b><span>ambient · 70 bpm</span></li>
+        <li><b>neon commute</b><span>city pop · 96 bpm</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter left catalog-chapter" id="catalog" aria-labelledby="catalogTitle">
+    <div class="catalog-intro">
+      <p class="eyebrow">02 — THE CATALOG / SELECTED WORK</p>
+      <h2 id="catalogTitle">Good things.<br><em>Filed away.</em></h2>
+      <p>A collection of little worlds, made for the web. Every drawer holds a record. Every record opens a door.</p>
+      <div class="catalog-list" aria-label="Project drawers"></div>
+      <p class="catalog-note">07 RECORDS · FIND THEIR SECRETS IN THE ROOM<br>Choose a drawer to take a closer look.</p>
+    </div>
+  </section>
+
+  <section class="chapter shelf-chapter" id="shelf" aria-labelledby="shelfTitle">
+    <div class="shelf-stage">
+      <div class="shelf-heading">
+        <div><p class="eyebrow">03 — THE SHELF / VIBES EDITIONS</p><h2 id="shelfTitle">A spine. A story.<br>A little world.</h2></div>
+        <p>SELECTED WORKS<br>SCROLL TO BROWSE<br>CLICK TO PULL A BOOK</p>
+      </div>
+      <div class="shelf-fallback" aria-label="Project editions"></div>
+      <div class="shelf-footer">
+        <div class="shelf-caption" aria-live="polite" aria-atomic="true">
+          <p class="shelf-index">VIBES EDITIONS</p><h3 class="shelf-title">Selected works</h3>
+          <p class="shelf-author">VIBES EDITIONS</p><p class="shelf-tagline">Little worlds, bound together.</p>
+        </div>
+        <div class="shelf-controls" role="group" aria-label="Browse project books">
+          <button class="shelf-prev" type="button" aria-label="Previous book">←</button>
+          <div class="shelf-books" role="group" aria-label="Select a book"></div>
+          <button class="shelf-next" type="button" aria-label="Next book">→</button>
+          <button class="shelf-open" type="button">Pull this book <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter left canal-chapter" id="rooms" aria-labelledby="rmTitle">
+    <div class="canal-caption">
+      <p class="eyebrow">04 — THROUGH THE WINDOW / AFTER HOURS</p>
+      <h2 id="rmTitle">The night<br>has <em>another side.</em></h2>
+      <p>Past the rain, a quieter world. Follow the water.<br>There is a little door beneath the bridge.</p>
+      <p class="canal-scroll">SCROLL TO GLIDE <span aria-hidden="true">↓</span></p>
+    </div>
+    <div class="canal-coordinates" aria-hidden="true">CANALE DI NOOK<br>22:47 · MOONLIT PASSAGE</div>
+  </section>
+
+  <section class="chapter right" id="mixes" aria-labelledby="mxTitle">
+    <div class="panel">
+      <p class="eyebrow rs">05 — Mixes</p>
+      <h2 id="mxTitle" class="rs">Glow <em>on the beat.</em></h2>
+      <p class="rs">Our mixes are tempo-locked to the room: the neon breathes, the speakers pump and the string lights twinkle in time.</p>
+      <ul class="list rs">
+        <li><b>slow days</b><span>48 min · study</span></li>
+        <li><b>sundown sessions</b><span>62 min · unwind</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter center" id="join" aria-labelledby="jnTitle">
+    <div class="panel marker-board">
+      <div class="marker-heading"><p class="eyebrow">06 — JOIN VIBES / LEAVE YOUR MARK</p><span class="marker-status" role="status">YOUR LOCAL GUESTBOOK</span></div>
+      <h2 id="jnTitle">Your corner<br><em>is <span data-marker-word>waiting</span>.</em></h2>
+      <p class="rs">No ads between tracks, no algorithms shouting. Just you, a warm room and music that sounds like 2 a.m.</p>
+      <p class="marker-invite">Some corners are worth circling. Make this one yours.</p>
+      <div class="marker-space" aria-hidden="true"><span>A LITTLE NOTE, A LITTLE DOODLE.</span></div>
+      <canvas class="marker-ink" aria-label="Doodle canvas. Pick up the marker to draw; tap waiting to circle it."></canvas>
+      <canvas class="marker-object" aria-hidden="true"></canvas>
+      <div class="marker-dock" role="toolbar" aria-label="Guestbook drawing tools">
+        <button type="button" data-marker="pen" aria-pressed="false"><span class="marker-swatch" aria-hidden="true"></span>Pick up the marker</button>
+        <button type="button" data-marker="eraser" aria-pressed="false">Eraser</button>
+        <button type="button" data-marker="circle" aria-label="Circle the word waiting">Circle word</button>
+        <button type="button" data-marker="undo" aria-label="Undo last stroke">Undo</button>
+        <button type="button" data-marker="clear">Clear</button>
+        <button type="button" data-marker="done" hidden>Put down <kbd>ESC</kbd></button>
+      </div>
+      <p class="marker-privacy">Saved on this device only. Not a public guestbook.</p>
+      <div class="cta rs">
+        <a href="#" class="btn primary magnetic" data-sound-on><span>Start listening</span> <b aria-hidden="true">→</b></a>
+        <a href="#hero" class="btn ghost magnetic" data-goto="hero"><span>Back to the couch</span></a>
+      </div>
+      <p class="fine rs">Vibes © 2026 · made with Three.js &amp; Web Audio — every sound is synthesized live in your browser.</p>
+    </div>
+  </section>
+</main>
+
+<aside class="np" id="np" aria-label="Now playing">
+  <div class="np-vinyl"><i></i></div>
+  <div class="np-info">
+    <p class="np-label">Now playing</p>
+    <p class="np-title">midnight vibes</p>
+    <p class="np-artist">Vibes · Room 03</p>
+    <div class="np-wave" id="npWave"></div>
+    <div class="np-prog"><i id="npProg"></i></div>
+  </div>
+</aside>
+
+<div class="marquee" aria-hidden="true"><div class="mq-track">
+  <span>lo-fi</span><span>jazzhop</span><span>ambient</span><span>city pop</span><span>rain sounds</span><span>chillwave</span><span>bedroom soul</span><span>lo-fi</span><span>jazzhop</span><span>ambient</span><span>city pop</span><span>rain sounds</span><span>chillwave</span><span>bedroom soul</span>
+</div></div>
+
+<div class="controls">
+  <button id="skipBtn" class="chip magnetic" type="button">Skip intro <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 5 7 7-7 7"/><path d="m13 5 7 7-7 7"/></svg></button>
+  <button id="replayBtn" class="chip magnetic" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Replay</button>
+</div>
+<div class="progress" aria-hidden="true"><i id="prog"></i></div>
+
+<div class="flashfx" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"><i class="c-dot"></i><i class="c-ring"></i></div>
+<noscript><style>#loader{display:none}html.locked,html.locked body{overflow:auto;height:auto}body .rv,body h1 .ch,body .topbar{opacity:1;transform:none}</style><p class="nojs">Enable JavaScript for the interactive room and project catalog.</p></noscript>
+
+
+</body>
+</html>

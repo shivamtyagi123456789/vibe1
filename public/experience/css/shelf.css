@@ -1,0 +1,43 @@
+/* REANIMATED PART 5 — THE SHELF */
+.chapter.shelf-chapter { height: 300vh; padding: 0; display: block; }
+.shelf-stage { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 118px clamp(24px, 8vw, 120px) 76px; }
+.shelf-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.shelf-heading h2 { font: italic 400 clamp(28px, 3.5vw, 48px)/1.1 var(--serif); letter-spacing: -.035em; }
+.shelf-heading .eyebrow { color: var(--amber); font-size: 9px; margin-bottom: 12px; }
+.shelf-heading > p { max-width: 170px; text-align: right; font: 9px/1.9 ui-monospace, monospace; color: var(--ink-3); letter-spacing: .13em; }
+.shelf-footer { width: min(620px, 100%); align-self: center; text-align: center; }
+.shelf-index, .shelf-author { font: 9px/1.5 ui-monospace, monospace; letter-spacing: .12em; color: var(--amber); }
+.shelf-caption { min-height: 112px; }
+.shelf-caption.changed { animation: shelfCaption .45s ease both; }
+.shelf-title { margin: 7px 0; font: 400 clamp(25px, 3vw, 38px)/1.15 var(--serif); }
+.shelf-author { color: var(--ink-3); font-size: 8px; text-transform: uppercase; }
+.shelf-tagline { margin: 8px auto 0; max-width: 430px; font-size: 11px; line-height: 1.6; color: var(--ink-2); }
+.shelf-controls { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 16px; margin-top: 14px; pointer-events: auto; }
+.shelf-controls > button { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; color: var(--amber); }
+.shelf-controls > button:disabled { opacity: .25; cursor: default; }
+.shelf-books { display: flex; gap: 2px; }
+.shelf-books button { min-width: 28px; height: 44px; font: 10px ui-monospace, monospace; color: var(--ink-3); border-bottom: 1px solid transparent; }
+.shelf-books button[aria-pressed="true"] { color: var(--amber); border-color: var(--amber); }
+.shelf-controls .shelf-open { border-radius: 0; border: 0; border-bottom: 1px solid var(--amber); width: auto; height: 36px; margin-left: 12px; font-size: 11px; }
+.shelf-controls button:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
+body.shelf-active .np, body.shelf-active .portal-hud, body.shelf-active .controls { opacity: 0; pointer-events: none; }
+body.revealed.shelf-active .scrim { opacity: .4; background: linear-gradient(180deg, #0b0712aa, transparent 38%, #0b0712 85%); }
+body.scene-fallback .shelf-chapter { height: auto; min-height: 100vh; }
+body.scene-fallback .shelf-stage { position: relative; height: auto; min-height: 100vh; gap: 48px; }
+body.scene-fallback .shelf-controls { display: none; }
+.shelf-fallback { display: none; }
+body.scene-fallback .shelf-fallback { display: grid; gap: 12px; width: min(600px, 100%); align-self: center; }
+.shelf-fallback a { display: flex; justify-content: space-between; padding: 16px; border: 1px solid var(--line); color: var(--amber); font-family: var(--serif); }
+@keyframes shelfCaption { from { opacity: .1; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 759px) {
+  .shelf-stage { padding: 104px 22px 68px; }
+  .shelf-heading h2 { font-size: 29px; }
+  .shelf-heading > p { max-width: 98px; font-size: 8px; }
+  .shelf-caption { min-height: 106px; }
+  .shelf-title { font-size: 27px; }
+  .shelf-controls { gap: 4px 8px; margin-top: 6px; }
+  .shelf-controls .shelf-open { flex-basis: 100%; margin-left: 0; border: 0; color: var(--amber); }
+  .shelf-books button { min-width: 28px; }
+  .shelf-tagline { max-width: 310px; font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .shelf-caption.changed { animation: none; } }
